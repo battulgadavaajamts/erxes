@@ -57,11 +57,3 @@ jobs:
           rm -rf node_modules
           yarn install --production
           yarn build
-
-      - name: Build docker image
-        if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/apm' )
-        run: |
-          cd widgets
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          docker build -t erxes/erxes-widgets:${GITHUB_REF#refs/heads/} -f Dockerfile .
-          docker push erxes/erxes-widgets:${GITHUB_REF#refs/heads/}
