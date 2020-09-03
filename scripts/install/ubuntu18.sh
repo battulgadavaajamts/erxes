@@ -124,6 +124,7 @@ module.exports = {
         DEBUG: "erxes-api:*",
         MONGO_URL: "$API_MONGO_URL",
         ELASTICSEARCH_URL: "http://localhost:9200",
+        ELK_SYNCER: "false",
         MAIN_APP_DOMAIN: "https://$erxes_domain",
         WIDGETS_DOMAIN: "https://$erxes_domain/widgets",
         INTEGRATIONS_API_DOMAIN: "https://$erxes_domain/integrations",
