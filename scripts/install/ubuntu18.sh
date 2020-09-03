@@ -62,6 +62,20 @@ echo "Installing Nginx"
 apt-get -qqy install -y nginx
 echo "Installed Nginx successfully"
 
+## setting up ufw firewall
+echo 'y' | ufw enable
+ufw allow 22
+ufw allow 80
+ufw allow 443
+
+# install certbot
+echo "Installing Certbot"
+add-apt-repository universe -y
+add-apt-repository ppa:certbot/certbot -y
+apt-get -qqy update
+apt-get -qqy install certbot python3-certbot-nginx
+echo "Installed Certbot successfully"
+
 # username that erxes will be installed in
 echo "Creating a new user called 'erxes' for you to use with your server."
 username=erxes
@@ -69,7 +83,7 @@ username=erxes
 # create a new user erxes if it does not exist
 id -u erxes &>/dev/null || useradd -m -s /bin/bash -U -G sudo $username
 
-# erxes user home directory
+# erxes directory
 erxes_root_dir=/home/$username/erxes.io
 
 su $username -c "mkdir -p $erxes_root_dir"
@@ -251,7 +265,7 @@ security:
 EOF
 systemctl start mongod
 
-echo "Restarting MongoDB..."
+echo "Starting MongoDB..."
 curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh > /usr/local/bin/wait-for-it.sh
 chmod +x /usr/local/bin/wait-for-it.sh
 /usr/local/bin/wait-for-it.sh --timeout=0 localhost:27017
@@ -345,12 +359,6 @@ server {
 EOF
 # reload nginx service
 systemctl reload nginx
-
-## setting up ufw firewall
-echo 'y' | ufw enable
-ufw allow 22
-ufw allow 80
-ufw allow 443
 
 echo
 echo -e "\e[32mInstallation complete\e[0m"
