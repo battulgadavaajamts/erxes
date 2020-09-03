@@ -9,96 +9,11 @@
 # 
 # * we expect you have configured your domain DNS settings already as per the instructions.
 
-set -Eeuo pipefail
-
-trap notify ERR
-
-ERXES_VERSION=0.17.6
-ERXES_API_VERSION=0.17.6
-ERXES_INTEGRATIONS_VERSION=0.17.6
+ERXES_VERSION=0.18.9
+ERXES_API_VERSION=0.18.9
+ERXES_INTEGRATIONS_VERSION=0.18.9
 
 NODE_VERSION=v12.16.3
-
-OS_NAME=notset
-DISTRO=notset
-RELEASE=notset
-ARCH=`uname -m`
-
-case "$OSTYPE" in
-  solaris*) OS_NAME="solaris" ;;
-  darwin*)  
-  	OS_NAME="darwin" 
-	  RELEASE=`uname -r`
-  ;; 
-  linux*)   
-  	OS_NAME="linux" 
-	
-    if [ -f /etc/redhat-release ] ; then
-      DistroBasedOn='RedHat'
-      DISTRO=`cat /etc/redhat-release |sed s/\ release.*//`
-      PSUEDONAME=`cat /etc/redhat-release | sed s/.*\(// | sed s/\)//`
-      RELEASE=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
-    elif [ -f /etc/SuSE-release ] ; then
-      DistroBasedOn='SuSe'
-      PSUEDONAME=`cat /etc/SuSE-release | tr "\n" ' '| sed s/VERSION.*//`
-      RELEASE=`cat /etc/SuSE-release | tr "\n" ' ' | sed s/.*=\ //`
-    elif [ -f /etc/mandrake-release ] ; then
-      DistroBasedOn='Mandrake'
-      PSUEDONAME=`cat /etc/mandrake-release | sed s/.*\(// | sed s/\)//`
-      RELEASE=`cat /etc/mandrake-release | sed s/.*release\ // | sed s/\ .*//`
-    elif [ -f /etc/debian_version ] ; then
-      DistroBasedOn='Debian'
-      DISTRO=`lsb_release -is`
-      PSUEDONAME=`lsb_release -cs`
-      RELEASE=`lsb_release -rs`
-    fi
-  ;;
-  bsd*)     OS_NAME="bsd" ;;
-  msys*)    OS_NAME="windows" ;;
-  *)        OS_NAME="unknown: $OSTYPE" ;;
-esac
-
-CPU_DATA=""
-CPUs=`lscpu | awk '/^CPU\(s\)/{print $2}'`
-MODEL_NAME=`lscpu | awk -F ":" '/Model name:/{gsub(/^[ \t]+/,"",$2); print $2}'`
-CPU_SPEED=`lscpu | awk -F ":" '/CPU MHz:/{gsub(/^[ \t]+/,"",$2); print $2}'`
-
-for ((i=1;i<=$CPUs;i++)); 
-do 
-   CPU_DATA="$CPU_DATA {	\"model\": \"$MODEL_NAME\", \"speed\": \"$CPU_SPEED\"	},"
-done
-CPU_DATA=`echo $CPU_DATA | sed 's/,*$//g'`;
-
-POST_DATA="$(cat <<EOF
-  "osInformation": {
-    "nodeVersion" : "$NODE_VERSION",
-    "platform" : "$OS_NAME",
-    "distro": "$DISTRO",
-    "release" : "$RELEASE",
-    "arch": "$ARCH",
-    "cpus": [$CPU_DATA]
-  }
-EOF
-)"
-
-NOW="$(date +'%Y-%m-%d %H:%M:%S')"
-
-function notify() {
-  FAILED_COMMAND="Something went wrong on line $LINENO : Failed command: ${BASH_COMMAND}"
-  
-  curl -s -X POST https://telemetry.erxes.io/events/ \
-    -H 'content-type: application/json' \
-    -d "$(cat <<EOF
-      [{
-        "eventType": "CLI_COMMAND_installation_status",
-        "errorMessage": "$FAILED_COMMAND",
-        "message": "error",
-        "time": "$NOW",
-        $POST_DATA
-      }]
-EOF
-      )"
-}
 
 #
 # Ask a domain name
@@ -119,19 +34,6 @@ done
 
 # install curl for telemetry
 apt-get -qqy install -y curl 
-
-curl -s -X POST https://telemetry.erxes.io/events/ \
-  -H 'content-type: application/json' \
-  -d "$(cat <<EOF
-      [{
-        "eventType": "CLI_COMMAND_installation_status",
-        "message": "attempt",
-        "time": "$NOW",
-        $POST_DATA
-      }]
-EOF
-      )"
-
 
 # Dependencies
 
@@ -155,21 +57,6 @@ systemctl enable mongod
 systemctl start mongod
 echo "MongoDB enabled and started successfully"
 
-# Java , elasticsearch dependency
-echo "Installing Java"
-apt-get -qqy install default-jre -y
-echo "Installed Java successfully"
-
-# Elasticsearch
-# https://www.elastic.co/guide/en/elasticsearch/reference/current/deb.html
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
-echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-7.x.list
-apt-get -qqy update
-apt-get -qqy install elasticsearch
-systemctl enable elasticsearch
-systemctl start elasticsearch
-echo "Installed Elasticsearch successfully"
-
 # Nginx
 echo "Installing Nginx"
 apt-get -qqy install -y nginx
@@ -189,40 +76,28 @@ su $username -c "mkdir -p $erxes_root_dir"
 cd $erxes_root_dir
 
 # erxes repo
-erxes_ui_dir=$erxes_root_dir/erxes
-erxes_widgets_dir=$erxes_root_dir/erxes-widgets
+erxes_ui_dir=$erxes_root_dir/ui/build
+erxes_widgets_dir=$erxes_root_dir/widgets
 
 # erxes-api repo
-erxes_api_dir=$erxes_root_dir/erxes-api
-erxes_engages_dir=$erxes_root_dir/erxes-engages-email-sender
-erxes_logger_dir=$erxes_root_dir/erxes-logger
-erxes_syncer_dir=$erxes_root_dir/erxes-elkSyncer
+erxes_backends_dir=$erxes_root_dir/backends
+erxes_api_dir=$erxes_backends_dir/api
+erxes_engages_dir=$erxes_backends_dir/engages-email-sender
+erxes_logger_dir=$erxes_backends_dir/logger
 
 # erxes-integrations repo
-erxes_integrations_dir=$erxes_root_dir/erxes-integrations
+erxes_integrations_dir=$erxes_root_dir/integrations
 
-su $username -c "mkdir -p $erxes_ui_dir $erxes_widgets_dir $erxes_api_dir $erxes_engages_dir $erxes_logger_dir $erxes_syncer_dir $erxes_integrations_dir"
+su $username -c "mkdir -p $erxes_backends_dir"
 
 # download erxes ui
-su $username -c "curl -L https://github.com/erxes/erxes/releases/download/$ERXES_VERSION/erxes-$ERXES_VERSION.tar.gz | tar --strip-components=1 -xz -C $erxes_ui_dir"
-
-# download erxes widgets
-su $username -c "curl -L https://github.com/erxes/erxes/releases/download/$ERXES_VERSION/erxes-widgets-$ERXES_VERSION.tar.gz | tar -xz -C $erxes_widgets_dir"
+su $username -c "curl -L https://github.com/battulgadavaajamts/erxes/releases/download/$ERXES_VERSION/erxes-$ERXES_VERSION.tar.gz | tar -xz -C $erxes_root_dir"
 
 # download erxes-api
-su $username -c "curl -L https://github.com/erxes/erxes-api/releases/download/$ERXES_API_VERSION/erxes-api-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_api_dir"
-
-# download engages-email-sender
-su $username -c "curl -L https://github.com/erxes/erxes-api/releases/download/$ERXES_API_VERSION/erxes-engages-email-sender-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_engages_dir"
-
-# download logger
-su $username -c "curl -L https://github.com/erxes/erxes-api/releases/download/$ERXES_API_VERSION/erxes-logger-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_logger_dir"
-
-# download elkSyncer
-su $username -c "curl -L https://github.com/erxes/erxes-api/releases/download/$ERXES_API_VERSION/erxes-elkSyncer-$ERXES_API_VERSION.tar.gz | tar --strip-components=1 -xz -C $erxes_syncer_dir"
+su $username -c "curl -L https://github.com/battulgadavaajamts/erxes-api/releases/download/$ERXES_API_VERSION/erxes-api-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_backends_dir"
 
 # download integrations
-su $username -c "curl -L https://github.com/erxes/erxes-integrations/releases/download/$ERXES_INTEGRATIONS_VERSION/erxes-integrations-$ERXES_INTEGRATIONS_VERSION.tar.gz | tar -xz -C $erxes_integrations_dir"
+su $username -c "curl -L https://github.com/battulgadavaajamts/erxes-integrations/releases/download/$ERXES_INTEGRATIONS_VERSION/erxes-integrations-$ERXES_INTEGRATIONS_VERSION.tar.gz | tar -xz -C $erxes_root_dir"
 
 JWT_TOKEN_SECRET=$(openssl rand -base64 24)
 MONGO_PASS=$(openssl rand -hex 16)
@@ -341,17 +216,6 @@ module.exports = {
         MONGO_URL: "$INTEGRATIONS_MONGO_URL",
       },
     },
-    {
-      name: "erxes-elkSyncer",
-      script: "main.py",
-      cwd: "$erxes_syncer_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      interpreter: "/usr/bin/python3",
-      env: {
-        MONGO_URL: "$API_MONGO_URL",
-        ELASTICSEARCH_URL: "http://localhost:9200",
-      },
-    },
   ],
 };
 EOF
@@ -411,15 +275,6 @@ window.env = {
 EOF
 chown $username:$username $erxes_ui_dir/js/env.js
 chmod 664 $erxes_ui_dir/js/env.js
-
-# pip3 packages for elkSyncer
-pip3 install -r $erxes_syncer_dir/requirements.txt
-
-# elkSyncer env
-cat <<EOF >$erxes_syncer_dir/.env
-MONGO_URL=$API_MONGO_URL
-ELASTICSEARCH_URL=http://localhost:9200
-EOF
 
 # install nvm and install node using nvm
 su $username -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash"
@@ -495,8 +350,6 @@ echo 'y' | ufw enable
 ufw allow 22
 ufw allow 80
 ufw allow 443
-
-su $username -c "source ~/.nvm/nvm.sh && nvm use $NODE_VERSION && cd $erxes_api_dir && node ./dist/commands/trackTelemetry \"success\""
 
 echo
 echo -e "\e[32mInstallation complete\e[0m"
