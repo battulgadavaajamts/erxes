@@ -1,3 +1,10 @@
+## [0.19.2](https://https//github.com/battulgadavaajamts/erxes/compare/0.19.0...0.19.2) (2020-09-03)
+
+
+### Bug Fixes
+
+* **system-status:** fixed system status ([7049489](https://https//github.com/battulgadavaajamts/erxes/commits/70494899ed04c793bb748b0cedb6baf7ee54c0f9))
+
 # [0.19.0](https://https//github.com/battulgadavaajamts/erxes/compare/0.18.9...0.19.0) (2020-09-03)
 
 ## [0.18.9](https://https//github.com/battulgadavaajamts/erxes/compare/0.18.8...0.18.9) (2020-09-03)
