@@ -10,7 +10,7 @@
 # * we expect you have configured your domain DNS settings already as per the instructions.
 
 ERXES_VERSION=0.19.0
-ERXES_API_VERSION=0.19.0
+ERXES_API_VERSION=0.19.1
 ERXES_INTEGRATIONS_VERSION=0.19.0
 
 NODE_VERSION=v12.16.3
