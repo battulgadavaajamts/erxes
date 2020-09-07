@@ -9,9 +9,9 @@
 # 
 # * we expect you have configured your domain DNS settings already as per the instructions.
 
-ERXES_VERSION=0.19.0
-ERXES_API_VERSION=0.19.1
-ERXES_INTEGRATIONS_VERSION=0.19.0
+ERXES_VERSION=0.19.4
+ERXES_API_VERSION=0.19.5
+ERXES_INTEGRATIONS_VERSION=0.19.3
 
 NODE_VERSION=v12.16.3
 
@@ -124,25 +124,22 @@ su $username -c "mkdir -p $erxes_root_dir"
 cd $erxes_root_dir
 
 # erxes repo
-erxes_ui_dir=$erxes_root_dir/ui/build
-erxes_widgets_dir=$erxes_root_dir/widgets
+erxes_ui_dir=$erxes_root_dir/erxes
+erxes_widgets_dir=$erxes_root_dir/erxes-widgets
 
 # erxes-api repo
-erxes_backends_dir=$erxes_root_dir/backends
-erxes_api_dir=$erxes_backends_dir/api
-erxes_engages_dir=$erxes_backends_dir/engages-email-sender
-erxes_logger_dir=$erxes_backends_dir/logger
+erxes_api_dir=$erxes_root_dir/erxes-api
+erxes_engages_dir=$erxes_root_dir/erxes-engages-email-sender
+erxes_logger_dir=$erxes_root_dir/erxes-logger
 
 # erxes-integrations repo
-erxes_integrations_dir=$erxes_root_dir/integrations
-
-su $username -c "mkdir -p $erxes_backends_dir"
+erxes_integrations_dir=$erxes_root_dir/erxes-integrations
 
 # download erxes ui
 su $username -c "curl -L https://github.com/battulgadavaajamts/erxes/releases/download/$ERXES_VERSION/erxes-$ERXES_VERSION.tar.gz | tar -xz -C $erxes_root_dir"
 
 # download erxes-api
-su $username -c "curl -L https://github.com/battulgadavaajamts/erxes-api/releases/download/$ERXES_API_VERSION/erxes-api-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_backends_dir"
+su $username -c "curl -L https://github.com/battulgadavaajamts/erxes-api/releases/download/$ERXES_API_VERSION/erxes-api-$ERXES_API_VERSION.tar.gz | tar -xz -C $erxes_root_dir"
 
 # download integrations
 su $username -c "curl -L https://github.com/battulgadavaajamts/erxes-integrations/releases/download/$ERXES_INTEGRATIONS_VERSION/erxes-integrations-$ERXES_INTEGRATIONS_VERSION.tar.gz | tar -xz -C $erxes_root_dir"
