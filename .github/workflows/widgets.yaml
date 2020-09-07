@@ -46,11 +46,6 @@ jobs:
           cd widgets
           yarn install
 
-      - name: Lint
-        run: |
-          cd widgets
-          yarn lint
-
       - name: Build
         run: |
           cd widgets
