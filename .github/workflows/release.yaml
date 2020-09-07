@@ -19,7 +19,6 @@ jobs:
 
     - name: Get release version
       id: get_release_version
-      if: startsWith(github.ref, 'refs/tags/')
       run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
 
     # https://github.com/actions/cache/blob/master/examples.md#node---yarn
@@ -40,16 +39,6 @@ jobs:
         cd ui
         yarn install
 
-    - name: UI - Lint
-      run: |
-        cd ui
-        yarn lint
-
-    - name: UI - Tsc
-      run: |
-        cd ui
-        yarn tsc
-
     - name: UI - Build
       run: |
         cd ui
@@ -62,11 +51,6 @@ jobs:
         cd widgets
         yarn install
 
-    - name: Widgets - Lint
-      run: |
-        cd widgets
-        yarn lint
-
     - name: Widgets - Build
       run: |
         cd widgets
@@ -75,13 +59,15 @@ jobs:
         yarn build
 
     - name: Prepare release assets
-      if: startsWith(github.ref, 'refs/tags/')
       run: |
-        tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz ui/build widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json
+        mkdir -p erxes
+        mv ui/build erxes
+        mkdir -p erxes-widgets
+        mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json erxes-widgets
+        tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz erxes erxes-widgets
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
           files: |
             erxes-${{ steps.get_release_version.outputs.VERSION }}.tar.gz
