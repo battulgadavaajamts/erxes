@@ -49,14 +49,14 @@ jobs:
         cd api
         yarn install
 
-    - name: Api - Lint
-      run: |
-        yarn lint api
+    # - name: Api - Lint
+    #   run: |
+    #     yarn lint api
 
-    - name: Api - Tsc
-      run: |
-        cd api
-        yarn tsc -p tsconfig.prod.json
+    # - name: Api - Tsc
+    #   run: |
+    #     cd api
+    #     yarn tsc -p tsconfig.prod.json
 
     - name: Api - Test
       run: |
@@ -148,9 +148,9 @@ jobs:
         cd integrations
         yarn install
 
-    - name: Integrations - Lint
-      run: |
-        yarn lint integrations
+    # - name: Integrations - Lint
+    #   run: |
+    #     yarn lint integrations
 
     - name: Integrations - Test
       run: |
@@ -183,14 +183,14 @@ jobs:
         cd ui
         yarn install
 
-    - name: UI - Lint
-      run: |
-        yarn lint ui
+    # - name: UI - Lint
+    #   run: |
+    #     yarn lint ui
 
-    - name: UI - Tsc
-      run: |
-        cd ui
-        yarn tsc
+    # - name: UI - Tsc
+    #   run: |
+    #     cd ui
+    #     yarn tsc
 
     - name: UI - Build
       run: |
@@ -204,9 +204,9 @@ jobs:
         cd widgets
         yarn install
 
-    - name: Widgets - Lint
-      run: |
-        yarn lint widgets
+    # - name: Widgets - Lint
+    #   run: |
+    #     yarn lint widgets
 
     - name: Widgets - Build
       run: |
@@ -220,6 +220,11 @@ jobs:
         cd ..
         mkdir build
 
+        ls
+        ls ui
+        ls widgets
+        ls api
+
         mv ui/build build/ui
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
         mv api/dist api/node_modules api/db-migrate-store.js api/package.json build/api
@@ -228,6 +233,7 @@ jobs:
         mv logger/dist logger/node_modules logger/package.json build/logger
         mv elkSyncer build/elkSyncer
         mv integrations/dist integrations/node_modules integrations/package.json build/integrations
+
         tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz build
 
     - name: Upload release assets
