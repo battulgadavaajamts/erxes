@@ -150,7 +150,12 @@ class ArticleForm extends React.Component<Props, State> {
         </FlexContent>
         <FormGroup>
           <ControlLabel required={true}>{__('Content')}</ControlLabel>
-          <EditorCK content={content} onChange={this.onChange} height={300} />
+          <EditorCK
+            content={content}
+            onChange={this.onChange}
+            height={300}
+            name={`knowledgeBase_${article ? article._id : 'create'}`}
+          />
         </FormGroup>
 
         <ModalFooter>
@@ -158,7 +163,8 @@ class ArticleForm extends React.Component<Props, State> {
             btnStyle="simple"
             type="button"
             onClick={this.props.closeModal}
-            icon="cancel-1"
+            icon="times-circle"
+            uppercase={false}
           >
             {__('Cancel')}
           </Button>
