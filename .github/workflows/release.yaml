@@ -92,10 +92,10 @@ jobs:
     #     docker build -t erxes/erxes-elksyncer:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-elksyncer:${GITHUB_REF#refs/tags/}
 
-    # - name: Email Verifier - Install dependencies
-    #   run: |
-    #     cd email-verifier
-    #     yarn install --production
+    - name: Email Verifier - Install dependencies
+      run: |
+        cd email-verifier
+        yarn install --production
 
     - name: Email Verifier - Build
       run: |
@@ -109,10 +109,10 @@ jobs:
     #     docker build -t erxes/erxes-email-verifier:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-email-verifier:${GITHUB_REF#refs/tags/}
 
-    # - name: Engages - Install dependencies
-    #   run: |
-    #     cd engages-email-sender
-    #     yarn install --production
+    - name: Engages - Install dependencies
+      run: |
+        cd engages-email-sender
+        yarn install --production
 
     - name: Engages - Build
       run: |
@@ -126,10 +126,10 @@ jobs:
     #     docker build -t erxes/erxes-engages-email-sender:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-engages-email-sender:${GITHUB_REF#refs/tags/}
 
-    # - name: Logger - Install dependencies
-    #   run: |
-    #     cd logger
-    #     yarn install --production
+    - name: Logger - Install dependencies
+      run: |
+        cd logger
+        yarn install --production
 
     - name: Logger - Build
       run: |
