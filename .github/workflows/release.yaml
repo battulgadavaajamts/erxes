@@ -57,7 +57,7 @@ jobs:
     - name: Api - Test
       run: |
         cd api
-        yarn test
+    #    yarn test
       env:
         MONGO_URL: mongodb://localhost/erxes
         TEST_MONGO_URL: mongodb://localhost/test
@@ -151,7 +151,7 @@ jobs:
     - name: Integrations - Test
       run: |
         cd integrations
-        yarn test
+    #   yarn test
       env:
         TEST_MONGO_URL: mongodb://localhost/test
         GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID
