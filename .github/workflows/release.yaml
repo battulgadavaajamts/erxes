@@ -221,7 +221,7 @@ jobs:
         mkdir -p build/widgets
         ls build
         echo "1111111"
-        mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
+        mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
         echo "2222222"
         ls build/widgets
         mkdir -p build/api
