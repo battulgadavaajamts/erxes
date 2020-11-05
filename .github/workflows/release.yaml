@@ -217,19 +217,24 @@ jobs:
 
     - name: Prepare release assets
       run: |
-        ls
-        echo "=========="
         mkdir -p build
-        ls build
-        echo "====================="
         mkdir -p build/widgets
-        mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
         ls build
+        echo "1111111"
+        mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
+        echo "2222222"
+        ls build/widgets
+        mkdir -p build/api
         mv api/node_modules api/db-migrate-store.js api/package.json build/api
+        mkdir -p build/email-verifier
         mv email-verifier/node_modules email-verifier/package.json build/email-verifier
+        mkdir -p build/engages
         mv engages-email-sender/node_modules engages-email-sender/package.json build/engages
+        mkdir -p build/logger
         mv logger/node_modules logger/package.json build/logger
+        mkdir -p build/elkSyncer
         mv elkSyncer build/elkSyncer
+        mkdir -p build/integrations
         mv integrations/node_modules integrations/package.json build/integrations
 
         tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz build
