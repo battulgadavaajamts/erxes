@@ -219,9 +219,10 @@ jobs:
       run: |
         ls
         echo "=========="
-        mkdir build
+        mkdir -p build
         ls build
         echo "====================="
+        mkdir -p build/widgets
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
         ls build
         mv api/node_modules api/db-migrate-store.js api/package.json build/api
