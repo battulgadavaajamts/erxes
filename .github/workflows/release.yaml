@@ -69,12 +69,12 @@ jobs:
     #     MAIN_APP_DOMAIN: http://localhost:3000
     #     RABBITMQ_HOST: amqp://localhost
 
-    - name: Api - Build
-      run: |
-        cd api
-        rm -rf node_modules
-        yarn install --production
-        yarn build
+    # - name: Api - Build
+    #   run: |
+    #     cd api
+    #     rm -rf node_modules
+    #     yarn install --production
+    #     yarn build
 
     # - name: Api - Build docker image
     #   env:
@@ -92,15 +92,15 @@ jobs:
     #     docker build -t erxes/erxes-elksyncer:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-elksyncer:${GITHUB_REF#refs/tags/}
 
-    - name: Email Verifier - Install dependencies
-      run: |
-        cd email-verifier
-        yarn install --production
+    # - name: Email Verifier - Install dependencies
+    #   run: |
+    #     cd email-verifier
+    #     yarn install --production
 
-    - name: Email Verifier - Build
-      run: |
-        cd email-verifier
-        yarn build
+    # - name: Email Verifier - Build
+    #   run: |
+    #     cd email-verifier
+    #     yarn build
 
     # - name: Email Verifier - Build docker image
     #   run: |
@@ -109,15 +109,15 @@ jobs:
     #     docker build -t erxes/erxes-email-verifier:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-email-verifier:${GITHUB_REF#refs/tags/}
 
-    - name: Engages - Install dependencies
-      run: |
-        cd engages-email-sender
-        yarn install --production
+    # - name: Engages - Install dependencies
+    #   run: |
+    #     cd engages-email-sender
+    #     yarn install --production
 
-    - name: Engages - Build
-      run: |
-        cd engages-email-sender
-        yarn build
+    # - name: Engages - Build
+    #   run: |
+    #     cd engages-email-sender
+    #     yarn build
 
     # - name: Engages - Build docker image
     #   run: |
@@ -126,15 +126,15 @@ jobs:
     #     docker build -t erxes/erxes-engages-email-sender:${GITHUB_REF#refs/tags/} -f Dockerfile .
     #     docker push erxes/erxes-engages-email-sender:${GITHUB_REF#refs/tags/}
 
-    - name: Logger - Install dependencies
-      run: |
-        cd logger
-        yarn install --production
+    # - name: Logger - Install dependencies
+    #   run: |
+    #     cd logger
+    #     yarn install --production
 
-    - name: Logger - Build
-      run: |
-        cd logger
-        yarn build
+    # - name: Logger - Build
+    #   run: |
+    #     cd logger
+    #     yarn build
 
     # - name: Logger - Build docker image
     #   run: |
@@ -164,12 +164,12 @@ jobs:
     #     DOMAIN: http://localhost:3400
     #     MAIN_APP_DOMAIN: http://localhost:3400
 
-    - name: Integrations - Build
-      run: |
-        cd integrations
-        rm -rf node_modules
-        yarn install --production
-        yarn build
+    # - name: Integrations - Build
+    #   run: |
+    #     cd integrations
+    #     rm -rf node_modules
+    #     yarn install --production
+    #     yarn build
 
     # - name: Integrations - Build docker image
     #   run: |
@@ -192,12 +192,12 @@ jobs:
     #     cd ui
     #     yarn tsc
 
-    - name: UI - Build
-      run: |
-        cd ui
-        rm -rf node_modules
-        yarn install --production
-        yarn build
+    # - name: UI - Build
+    #   run: |
+    #     cd ui
+    #     rm -rf node_modules
+    #     yarn install --production
+    #     yarn build
 
     # - name: Widgets - Install dependencies
     #   run: |
