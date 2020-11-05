@@ -218,12 +218,8 @@ jobs:
     - name: Prepare release assets
       run: |
         ls
-        mkdir build
-
-        ls
-        ls ui
-        ls widgets
-        ls api
+        echo "===================="
+        ls build
 
         mv ui/build build/ui
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
