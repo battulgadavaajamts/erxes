@@ -218,7 +218,6 @@ jobs:
     - name: Prepare release assets
       run: |
         mkdir build/widgets
-        mkdir build/ui
 
         mv ui/build build/ui
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
