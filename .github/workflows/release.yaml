@@ -217,6 +217,7 @@ jobs:
 
     - name: Prepare release assets
       run: |
+        ls
         echo "=========="
         ls build
         echo "====================="
