@@ -217,8 +217,7 @@ jobs:
 
     - name: Prepare release assets
       run: |
-        pwd
-        ls erxes
+        ls
         mkdir build
 
         ls
