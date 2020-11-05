@@ -217,6 +217,9 @@ jobs:
 
     - name: Prepare release assets
       run: |
+        echo "=========="
+        ls build
+        echo "====================="
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json buid/widgets
         mv api/node_modules api/db-migrate-store.js api/package.json build/api
         mv email-verifier/node_modules email-verifier/package.json build/email-verifier
