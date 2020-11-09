@@ -76,12 +76,12 @@ jobs:
         yarn install --production
         yarn build
 
-    - name: UI - Build
-      run: |
-        cd ui
-        rm -rf node_modules
-        yarn install --production
-        yarn build
+    # - name: UI - Build
+    #   run: |
+    #     cd ui
+    #     rm -rf node_modules
+    #     yarn install --production
+    #     yarn build
 
     - name: Widgets - Build
       run: |
@@ -92,9 +92,8 @@ jobs:
 
     - name: Prepare release assets
       run: |
+        cd ..
         mkdir build
-
-        mv ui/build build/ui
 
         mkdir build/widgets
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
