@@ -1,3 +1,10 @@
+## [0.20.96](https://github.com/erxes/erxes/compare/0.20.95...0.20.96) (2020-11-09)
+
+
+### Features
+
+* **cli:** added erxes cli ([199eea3](https://github.com/erxes/erxes/commit/199eea319c49224465ffcfa99c8e144e06fe7f2a))
+
 ## [0.20.95](https://https//github.com/battulgadavaajamts/erxes/compare/0.20.94...0.20.95) (2020-11-05)
 
 ## [0.20.94](https://https//github.com/battulgadavaajamts/erxes/compare/0.20.93...0.20.94) (2020-11-05)
