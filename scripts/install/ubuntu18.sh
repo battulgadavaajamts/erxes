@@ -9,11 +9,94 @@
 # 
 # * we expect you have configured your domain DNS settings already as per the instructions.
 
-ERXES_VERSION=0.19.4
-ERXES_API_VERSION=0.19.5
-ERXES_INTEGRATIONS_VERSION=0.19.3
+set -Eeuo pipefail
+
+trap notify ERR
 
 NODE_VERSION=v12.19.0
+
+ELASTICSEARCH_URL="http://localhost:9200"
+
+OS_NAME=notset
+DISTRO=notset
+RELEASE=notset
+ARCH=`uname -m`
+
+case "$OSTYPE" in
+  solaris*) OS_NAME="solaris" ;;
+  darwin*)  
+  	OS_NAME="darwin" 
+	  RELEASE=`uname -r`
+  ;; 
+  linux*)   
+  	OS_NAME="linux" 
+	
+    if [ -f /etc/redhat-release ] ; then
+      DistroBasedOn='RedHat'
+      DISTRO=`cat /etc/redhat-release |sed s/\ release.*//`
+      PSUEDONAME=`cat /etc/redhat-release | sed s/.*\(// | sed s/\)//`
+      RELEASE=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
+    elif [ -f /etc/SuSE-release ] ; then
+      DistroBasedOn='SuSe'
+      PSUEDONAME=`cat /etc/SuSE-release | tr "\n" ' '| sed s/VERSION.*//`
+      RELEASE=`cat /etc/SuSE-release | tr "\n" ' ' | sed s/.*=\ //`
+    elif [ -f /etc/mandrake-release ] ; then
+      DistroBasedOn='Mandrake'
+      PSUEDONAME=`cat /etc/mandrake-release | sed s/.*\(// | sed s/\)//`
+      RELEASE=`cat /etc/mandrake-release | sed s/.*release\ // | sed s/\ .*//`
+    elif [ -f /etc/debian_version ] ; then
+      DistroBasedOn='Debian'
+      DISTRO=`lsb_release -is`
+      PSUEDONAME=`lsb_release -cs`
+      RELEASE=`lsb_release -rs`
+    fi
+  ;;
+  bsd*)     OS_NAME="bsd" ;;
+  msys*)    OS_NAME="windows" ;;
+  *)        OS_NAME="unknown: $OSTYPE" ;;
+esac
+
+CPU_DATA=""
+CPUs=`lscpu | awk '/^CPU\(s\)/{print $2}'`
+MODEL_NAME=`lscpu | awk -F ":" '/Model name:/{gsub(/^[ \t]+/,"",$2); print $2}'`
+CPU_SPEED=`lscpu | awk -F ":" '/CPU MHz:/{gsub(/^[ \t]+/,"",$2); print $2}'`
+
+for ((i=1;i<=$CPUs;i++)); 
+do 
+   CPU_DATA="$CPU_DATA {	\"model\": \"$MODEL_NAME\", \"speed\": \"$CPU_SPEED\"	},"
+done
+CPU_DATA=`echo $CPU_DATA | sed 's/,*$//g'`;
+
+POST_DATA="$(cat <<EOF
+  "osInformation": {
+    "nodeVersion" : "$NODE_VERSION",
+    "platform" : "$OS_NAME",
+    "distro": "$DISTRO",
+    "release" : "$RELEASE",
+    "arch": "$ARCH",
+    "cpus": [$CPU_DATA]
+  }
+EOF
+)"
+
+NOW="$(date +'%Y-%m-%d %H:%M:%S')"
+
+function notify() {
+  FAILED_COMMAND="Something went wrong on line $LINENO : Failed command: ${BASH_COMMAND}"
+  
+  curl -s -X POST https://telemetry.erxes.io/events/ \
+    -H 'content-type: application/json' \
+    -d "$(cat <<EOF
+      [{
+        "eventType": "CLI_COMMAND_installation_status",
+        "errorMessage": "$FAILED_COMMAND",
+        "message": "error",
+        "time": "$NOW",
+        $POST_DATA
+      }]
+EOF
+      )"
+}
 
 #
 # Ask a domain name
@@ -33,11 +116,17 @@ done
 # install curl for telemetry
 apt-get -qqy install -y curl 
 
-# Dependencies
-
-echo "Installing Initial Dependencies"
-
-apt-get -qqy update
+curl -s -X POST https://telemetry.erxes.io/events/ \
+  -H 'content-type: application/json' \
+  -d "$(cat <<EOF
+      [{
+        "eventType": "CLI_COMMAND_installation_status",
+        "message": "attempt",
+        "time": "$NOW",
+        $POST_DATA
+      }]
+EOF
+      )"
 
 #
 # Ask ES option
@@ -127,275 +216,7 @@ erxes_root_dir=/home/$username/erxes.io
 su $username -c "mkdir -p $erxes_root_dir"
 cd $erxes_root_dir
 
-# erxes repo
-erxes_ui_dir=$erxes_root_dir/erxes
-erxes_widgets_dir=$erxes_root_dir/erxes-widgets
-
-# erxes-api repo
-erxes_api_dir=$erxes_root_dir/erxes-api
-erxes_engages_dir=$erxes_root_dir/erxes-engages-email-sender
-erxes_logger_dir=$erxes_root_dir/erxes-logger
-
-# erxes-integrations repo
-erxes_integrations_dir=$erxes_root_dir/erxes-integrations
-
-# su $username -c "mkdir -p $erxes_ui_dir $erxes_widgets_dir $erxes_api_dir $erxes_engages_dir $erxes_logger_dir $erxes_syncer_dir $erxes_integrations_dir"
-
-ERXES_RELEASE_URL="https://github.com/erxes/erxes/releases/download/0.19.3/erxes-0.19.3.tar.gz"
-ERXES_API_RELEASE_URL="https://github.com/erxes/erxes-api/releases/download/0.19.3/erxes-api-0.19.3.tar.gz"
-ERXES_INTEGRATIONS_RELEASE_URL="https://github.com/erxes/erxes-integrations/releases/download/0.19.3/erxes-integrations-0.19.3.tar.gz"
-
-# download erxes
-su $username -c "curl -L $ERXES_RELEASE_URL | tar -xz"
-
-# download erxes-api
-su $username -c "curl -L $ERXES_API_RELEASE_URL | tar -xz"
-
-# download integrations
-su $username -c "curl -L $ERXES_INTEGRATIONS_RELEASE_URL | tar -xz"
-
-JWT_TOKEN_SECRET=$(openssl rand -base64 24)
 MONGO_PASS=$(openssl rand -hex 16)
-
-API_MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes?authSource=admin&replicaSet=rs0"
-ENGAGES_MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes-engages?authSource=admin&replicaSet=rs0"
-LOGGER_MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes_logs?authSource=admin&replicaSet=rs0"
-INTEGRATIONS_MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes_integrations?authSource=admin&replicaSet=rs0"
-
-# create an ecosystem.config.js in $erxes_root_dir directory and change owner and permission
-# TODO: remove ecosystem.config.js duplications here
-if [ $esChoice -eq 1 ];
-then
-  cat > $erxes_root_dir/ecosystem.config.js << EOF
-module.exports = {
-  apps: [
-    {
-      name: "erxes-api",
-      script: "dist",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3300,
-        NODE_ENV: "production",
-        JWT_TOKEN_SECRET: "$JWT_TOKEN_SECRET",
-        DEBUG: "erxes-api:*",
-        MONGO_URL: "$API_MONGO_URL",
-        ELASTICSEARCH_URL: "http://localhost:9200",
-        ELK_SYNCER: "false",
-        MAIN_APP_DOMAIN: "https://$erxes_domain",
-        WIDGETS_DOMAIN: "https://$erxes_domain/widgets",
-        INTEGRATIONS_API_DOMAIN: "https://$erxes_domain/integrations",
-        LOGS_API_DOMAIN: "http://127.0.0.1:3800",
-        ENGAGES_API_DOMAIN: "http://127.0.0.1:3900",
-      },
-    },
-    {
-      name: "erxes-cronjobs",
-      script: "dist/cronJobs",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT_CRONS: 3600,
-        NODE_ENV: "production",
-        PROCESS_NAME: "crons",
-        DEBUG: "erxes-crons:*",
-        MONGO_URL: "$API_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-workers",
-      script: "dist/workers",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--experimental-worker",
-      env: {
-        PORT_WORKERS: 3700,
-        NODE_ENV: "production",
-        DEBUG: "erxes-workers:*",
-        MONGO_URL: "$API_MONGO_URL",
-        JWT_TOKEN_SECRET: "$JWT_TOKEN_SECRET",
-      },
-    },
-    {
-      name: "erxes-widgets",
-      script: "dist",
-      cwd: "$erxes_widgets_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3200,
-        NODE_ENV: "production",
-        ROOT_URL: "https://$erxes_domain/widgets",
-        API_URL: "https://$erxes_domain/api",
-        API_SUBSCRIPTIONS_URL: "wss://$erxes_domain/api/subscriptions",
-      },
-    },
-    {
-      name: "erxes-engages",
-      script: "dist",
-      cwd: "$erxes_engages_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3900,
-        NODE_ENV: "production",
-        DEBUG: "erxes-engages:*",
-        MAIN_API_DOMAIN: "https://$erxes_domain/api",
-        MONGO_URL: "$ENGAGES_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-logger",
-      script: "dist",
-      cwd: "$erxes_logger_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3800,
-        NODE_ENV: "production",
-        DEBUG: "erxes-logs:*",
-        MONGO_URL: "$LOGGER_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-integrations",
-      script: "dist",
-      cwd: "$erxes_integrations_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3400,
-        NODE_ENV: "production",
-        DEBUG: "erxes-integrations:*",
-        DOMAIN: "https://$erxes_domain/integrations",
-        MAIN_APP_DOMAIN: "https://$erxes_domain",
-        MAIN_API_DOMAIN: "https://$erxes_domain/api",
-        MONGO_URL: "$INTEGRATIONS_MONGO_URL",
-      },
-    },
-  ],
-};
-EOF
-else
-cat > $erxes_root_dir/ecosystem.config.js << EOF
-module.exports = {
-  apps: [
-    {
-      name: "erxes-api",
-      script: "dist",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3300,
-        NODE_ENV: "production",
-        JWT_TOKEN_SECRET: "$JWT_TOKEN_SECRET",
-        DEBUG: "erxes-api:*",
-        MONGO_URL: "$API_MONGO_URL",
-        ELASTICSEARCH_URL: "$ELASTICSEARCH_URL",
-        ELK_SYNCER: false,
-        MAIN_APP_DOMAIN: "https://$erxes_domain",
-        WIDGETS_DOMAIN: "https://$erxes_domain/widgets",
-        INTEGRATIONS_API_DOMAIN: "https://$erxes_domain/integrations",
-        LOGS_API_DOMAIN: "http://127.0.0.1:3800",
-        ENGAGES_API_DOMAIN: "http://127.0.0.1:3900",
-      },
-    },
-    {
-      name: "erxes-cronjobs",
-      script: "dist/cronJobs",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT_CRONS: 3600,
-        NODE_ENV: "production",
-        PROCESS_NAME: "crons",
-        DEBUG: "erxes-crons:*",
-        MONGO_URL: "$API_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-workers",
-      script: "dist/workers",
-      cwd: "$erxes_api_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--experimental-worker",
-      env: {
-        PORT_WORKERS: 3700,
-        NODE_ENV: "production",
-        DEBUG: "erxes-workers:*",
-        MONGO_URL: "$API_MONGO_URL",
-        JWT_TOKEN_SECRET: "$JWT_TOKEN_SECRET",
-      },
-    },
-    {
-      name: "erxes-widgets",
-      script: "dist",
-      cwd: "$erxes_widgets_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3200,
-        NODE_ENV: "production",
-        ROOT_URL: "https://$erxes_domain/widgets",
-        API_URL: "https://$erxes_domain/api",
-        API_SUBSCRIPTIONS_URL: "wss://$erxes_domain/api/subscriptions",
-      },
-    },
-    {
-      name: "erxes-engages",
-      script: "dist",
-      cwd: "$erxes_engages_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3900,
-        NODE_ENV: "production",
-        DEBUG: "erxes-engages:*",
-        MAIN_API_DOMAIN: "https://$erxes_domain/api",
-        MONGO_URL: "$ENGAGES_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-logger",
-      script: "dist",
-      cwd: "$erxes_logger_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3800,
-        NODE_ENV: "production",
-        DEBUG: "erxes-logs:*",
-        MONGO_URL: "$LOGGER_MONGO_URL",
-      },
-    },
-    {
-      name: "erxes-integrations",
-      script: "dist",
-      cwd: "$erxes_integrations_dir",
-      log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max_old_space_size=4096",
-      env: {
-        PORT: 3400,
-        NODE_ENV: "production",
-        DEBUG: "erxes-integrations:*",
-        DOMAIN: "https://$erxes_domain/integrations",
-        MAIN_APP_DOMAIN: "https://$erxes_domain",
-        MAIN_API_DOMAIN: "https://$erxes_domain/api",
-        MONGO_URL: "$INTEGRATIONS_MONGO_URL",
-      },
-    },
-  ],
-};
-EOF
-fi
-
-
-chown $username:$username $erxes_root_dir/ecosystem.config.js
-chmod 644 $erxes_root_dir/ecosystem.config.js
 
 # set mongod password
 result=$(mongo --eval "db=db.getSiblingDB('admin'); db.createUser({ user: 'erxes', pwd: \"$MONGO_PASS\", roles: [ 'root' ] })" )
@@ -436,20 +257,6 @@ while true; do
 done
 echo "Started MongoDB ReplicaSet successfully"
 
-
-# generate env.js
-cat <<EOF >$erxes_ui_dir/js/env.js
-window.env = {
-  PORT: 3000,
-  NODE_ENV: "production",
-  REACT_APP_API_URL: "https://$erxes_domain/api",
-  REACT_APP_API_SUBSCRIPTION_URL: "wss://$erxes_domain/api/subscriptions",
-  REACT_APP_CDN_HOST: "https://$erxes_domain/widgets"
-};
-EOF
-chown $username:$username $erxes_ui_dir/js/env.js
-chmod 664 $erxes_ui_dir/js/env.js
-
 # install nvm and install node using nvm
 su $username -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash"
 su $username -c "source ~/.nvm/nvm.sh && nvm install $NODE_VERSION && nvm alias default $NODE_VERSION && npm install -g yarn pm2"
@@ -458,66 +265,19 @@ su $username -c "source ~/.nvm/nvm.sh && nvm install $NODE_VERSION && nvm alias 
 env PATH=$PATH:/home/$username/.nvm/versions/node/$NODE_VERSION/bin pm2 startup -u $username --hp /home/$username
 systemctl enable pm2-$username
 
-# start erxes pm2 and save current processes
-su $username -c "source ~/.nvm/nvm.sh && nvm use $NODE_VERSION && cd $erxes_root_dir && pm2 start ecosystem.config.js && pm2 save"
+MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes?authSource=admin\&replicaSet=rs0"
 
-# Nginx erxes config
-cat <<EOF >/etc/nginx/sites-available/default
-server {
-        listen 80;
-        
-        server_name $erxes_domain;
+sourceCommand="source ~/.nvm/nvm.sh && nvm use $NODE_VERSION"
+su $username -c "$sourceCommand && yarn create erxes-app erxes --quickStart --domain=$erxes_domain --mongoUrl=\"$MONGO_URL\" --elasticsearchUrl=$ELASTICSEARCH_URL"
+cd erxes
+su $username -c "$sourceCommand && yarn start"
+cp nginx.conf /etc/nginx/sites-enabled/erxes.conf
 
-        root $erxes_ui_dir;
-        index index.html;
-        
-        error_log  /var/log/nginx/erxes.error.log;
-        access_log /var/log/nginx/erxes.access.log;
+nginx -t
 
-        location / {
-                root $erxes_ui_dir;
-                index index.html;
-
-                location / {
-                        try_files \$uri /index.html;
-                }
-        }
-
-        # widgets is running on 3200 port.
-        location /widgets/ {
-                proxy_pass http://127.0.0.1:3200/;
-                proxy_set_header Host \$http_host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade \$http_upgrade;
-                proxy_set_header Connection "Upgrade";
-        }
-
-        # api project is running on 3300 port.
-        location /api/ {
-                proxy_pass http://127.0.0.1:3300/;
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade \$http_upgrade;
-                proxy_set_header Connection "Upgrade";
-        }
-        # erxes integrations project is running on 3400 port.
-        location /integrations/ {
-                proxy_pass http://127.0.0.1:3400/;
-                proxy_set_header Host \$http_host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade \$http_upgrade;
-                proxy_set_header Connection "Upgrade";
-        }
-}
-EOF
 # reload nginx service
 systemctl reload nginx
 
-echo
-echo -e "\e[32mInstallation complete\e[0m"
+certbot run -n --nginx --agree-tos -d $erxes_domain --redirect --register-unsafely-without-email
+
+su $username -c "$sourceCommand && cd $erxes_root_dir/erxes/build/api && node ./commands/trackTelemetry \"success\""

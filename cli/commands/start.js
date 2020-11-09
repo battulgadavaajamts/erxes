@@ -1,9 +1,10 @@
 const fse = require("fs-extra");
-const { filePath, downloadLatesVersion, startBackendServices, startUI, log } = require('./utils');
+const figlet = require('figlet');
+const { filePath, downloadLatesVersion, startServices } = require('./utils');
 
 module.exports = async function(program) {
   try {
-    if (!program.ignoreDownload) {
+    if (!program || !program.ignoreDownload) {
       // download the latest build
       await downloadLatesVersion();
     }
@@ -11,10 +12,9 @@ module.exports = async function(program) {
     // create configs file
     const configs = await fse.readJSON(filePath('configs.json'));
 
-    startBackendServices(configs);
-    startUI(configs);
+    await startServices(configs);
 
-    log('Done  ...');
+    console.log(figlet.textSync('Welcome to Erxes'));
   } catch (e) {
     console.log(e);
   }
