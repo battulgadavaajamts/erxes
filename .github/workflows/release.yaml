@@ -51,30 +51,30 @@ jobs:
         yarn install --production
         yarn build
 
-    # - name: Email Verifier - Build
-    #   run: |
-    #     cd email-verifier
-    #     yarn install --production
-    #     yarn build
+    - name: Email Verifier - Build
+      run: |
+        cd email-verifier
+        yarn install --production
+        yarn build
 
-    # - name: Engages - Build
-    #   run: |
-    #     cd engages-email-sender
-    #     yarn install --production
-    #     yarn build
+    - name: Engages - Build
+      run: |
+        cd engages-email-sender
+        yarn install --production
+        yarn build
 
-    # - name: Logger - Build
-    #   run: |
-    #     cd logger
-    #     yarn install --production
-    #     yarn build
+    - name: Logger - Build
+      run: |
+        cd logger
+        yarn install --production
+        yarn build
 
-    # - name: Integrations - Build
-    #   run: |
-    #     cd integrations
-    #     rm -rf node_modules
-    #     yarn install --production
-    #     yarn build
+    - name: Integrations - Build
+      run: |
+        cd integrations
+        rm -rf node_modules
+        yarn install --production
+        yarn build
 
     # - name: UI - Build
     #   run: |
@@ -83,20 +83,16 @@ jobs:
     #     yarn install --production
     #     yarn build
 
-    # - name: Widgets - Build
-    #   run: |
-    #     cd widgets
-    #     rm -rf node_modules
-    #     yarn install --production
-    #     yarn build
+    - name: Widgets - Build
+      run: |
+        cd widgets
+        rm -rf node_modules
+        yarn install --production
+        yarn build
 
     - name: Prepare release assets
       run: |
-        pwd
-        ls
         mkdir build
-
-        mv ui/build build/ui
 
         mkdir build/widgets
         mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
