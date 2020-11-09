@@ -94,7 +94,6 @@ jobs:
       run: |
         pwd
         ls
-        cd ..
         mkdir build
 
         mv ui/build build/ui
