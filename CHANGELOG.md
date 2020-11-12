@@ -1,3 +1,6 @@
+## [0.20.103](https://github.com/erxes/erxes/compare/0.20.102...0.20.103) (2020-11-12)
+
+<<<<<<< HEAD
 ## [0.20.102](https://github.com/erxes/erxes/compare/0.20.101...0.20.102) (2020-11-12)
 
 ## [0.20.101](https://github.com/erxes/erxes/compare/0.20.100...0.20.101) (2020-11-09)
@@ -158,6 +161,11 @@
 ### Performance Improvements
 
 * **customer:** show actions in editform of task and deal ([852e707](https://https//github.com/battulgadavaajamts/erxes/commits/852e707c0443472ceca5825bfcc7f4c38f2618c7)), closes [close#2247](https://https//github.com/battulgadavaajamts/erxes/issues/2247)
+=======
+## [0.20.1](https://github.com/erxes/erxes/compare/0.20.0...0.20.1) (2020-11-09)
+
+## [0.20.1](https://github.com/erxes/erxes/compare/0.20.0...0.20.1) (2020-11-09)
+>>>>>>> 925dfaed4263176cc4b8036d029f4e9f9817215d
 
 
 
