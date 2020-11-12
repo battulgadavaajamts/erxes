@@ -98,7 +98,7 @@ jobs:
           yarn install --production
           yarn build-local
           cd .. 
-          cp dashboard-ui/build dashboard-ui-build-local
+          cp -r dashboard-ui/build dashboard-ui-build-local
           cd dashboard-ui
           rm -rf build
           yarn build
