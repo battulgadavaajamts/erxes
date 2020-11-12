@@ -89,6 +89,8 @@ jobs:
           rm -rf node_modules
           yarn install --production
           yarn build
+          mkdir build-local
+          mv build /build-lcoal
 
       - name: Dashobard - UI - Build
         run: |
@@ -131,7 +133,7 @@ jobs:
 
           mv build /build-local
           rm -rf /build-local/dashboard-ui
-          mv dashboard-ui /build-local/dashboard-ui
+          mv dashboard-ui/build /build-local/dashboard-ui
 
           tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz build
           tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz build-local
