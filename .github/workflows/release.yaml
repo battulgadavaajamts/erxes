@@ -89,8 +89,6 @@ jobs:
           rm -rf node_modules
           yarn install --production
           yarn build
-          mkdir build-local
-          mv build /build-lcoal
 
       - name: Dashobard - UI - Build
         run: |
@@ -98,10 +96,6 @@ jobs:
           rm -rf node_modules
           yarn install --production
           yarn build-local
-          mkdir build-local
-          mv build /build-local
-          rm -rf build
-          yarn build
 
       - name: Prepare release assets
         run: |
