@@ -1,4 +1,4 @@
-name: Publish Release
+name:
 
 on:
   push:
@@ -96,6 +96,7 @@ jobs:
           rm -rf node_modules
           yarn install --production
           yarn build
+          cd ..
           mkdir build-local
           mv dashboard-ui /build-local
           cd build-local
