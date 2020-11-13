@@ -111,9 +111,7 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir build
-          mkdir build-local
-
-          mv ui/build build/ui
+          rm -rf node_modules
 
           mkdir build/widgets
           mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
