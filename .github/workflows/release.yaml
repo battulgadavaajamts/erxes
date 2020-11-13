@@ -131,7 +131,7 @@ jobs:
           mv dashboard-api build/dashboard-api
           mv dashboard-ui/build build/dashboard-ui
 
-          mv build /build-local
+          cp -r build /build-local
           rm -rf /build-local/dashboard-ui
           mv dashboard-ui-build-local/build /build-local/dashboard-ui
 
