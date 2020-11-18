@@ -1,3 +1,5 @@
+## [0.200.4](https://github.com/erxes/erxes/compare/0.200.3...0.200.4) (2020-11-18)
+
 ## [0.200.3](https://github.com/erxes/erxes/compare/0.200.2...0.200.3) (2020-11-18)
 
 ## [0.200.2](https://github.com/erxes/erxes/compare/0.200.1...0.200.2) (2020-11-18)
