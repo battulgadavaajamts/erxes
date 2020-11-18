@@ -51,63 +51,6 @@ jobs:
           yarn install --production
           yarn build
 
-      - name: Email Verifier - Build
-        run: |
-          cd email-verifier
-          yarn install --production
-          yarn build
-
-      - name: Engages - Build
-        run: |
-          cd engages-email-sender
-          yarn install --production
-          yarn build
-
-      - name: Logger - Build
-        run: |
-          cd logger
-          yarn install --production
-          yarn build
-
-      - name: Integrations - Build
-        run: |
-          cd integrations
-          rm -rf node_modules
-          yarn install --production
-          yarn build
-
-      - name: UI - Build
-        run: |
-          cd ui
-          rm -rf node_modules
-          yarn install --production
-          yarn build
-
-      - name: Widgets - Build
-        run: |
-          cd widgets
-          rm -rf node_modules
-          yarn install --production
-          yarn build
-
-      - name: Dashobard - UI - Build
-        run: |
-          mkdir dashboard-ui-build-local
-          cd dashboard-ui
-          rm -rf node_modules
-          yarn install --production
-          yarn build-local
-          cd .. 
-          cp -r dashboard-ui/build dashboard-ui-build-local
-          cd dashboard-ui
-          rm -rf build
-          yarn build
-
-      - name: Dashboard - API - Build
-        run: |
-          cd dashboard-api
-          yarn install
-
       - name: Prepare release assets
         run: |
           mkdir build
@@ -115,31 +58,10 @@ jobs:
 
           rm -rf node_modules
 
-          mkdir build/widgets
-          mv widgets/dist widgets/node_modules widgets/locales widgets/static widgets/package.json build/widgets
-
           mv api/dist build/api
-          mv api/node_modules api/db-migrate-store.js api/package.json build/api
-
-          mv email-verifier/dist build/email-verifier
-          mv email-verifier/node_modules email-verifier/package.json build/email-verifier
-
-          mv engages-email-sender/dist build/engages
-          mv engages-email-sender/node_modules engages-email-sender/package.json build/engages
-
-          mv logger/dist build/logger
-          mv logger/node_modules logger/package.json build/logger
-
-          mv integrations/dist build/integrations
-          mv integrations/node_modules integrations/package.json build/integrations
-
-          mv elkSyncer build/elkSyncer
-          mv dashboard-api build/dashboard-api
-          mv dashboard-ui/build build/dashboard-ui
+          mv api/node_modules api/package.json build/api
 
           cp -a build/. build-local
-          rm -rf build-local/dashboard-ui
-          mv dashboard-ui-build-local/build build-local/dashboard-ui
 
           tar -zcf erxes-${GITHUB_REF#refs/tags/}.tar.gz build
           tar -zcf erxes-${GITHUB_REF#refs/tags/}-local.tar.gz build-local
