@@ -92,8 +92,10 @@ module.exports.log = log;
 
 module.exports.filePath = filePath;
 
-module.exports.downloadLatesVersion = async () => {
+module.exports.downloadLatesVersion = async configs => {
   log('Downloading erxes ...');
+
+  const { DOMAIN } = configs || {};
 
   // download the latest build
   await execCurl(
@@ -103,8 +105,14 @@ module.exports.downloadLatesVersion = async () => {
 
   const gitInfo = await fse.readJSON(filePath('gitInfo.json'));
 
+  let fileName = `${gitInfo.tag_name}`;
+
+  if (DOMAIN.includes('localhost')) {
+    fileName = `${gitInfo.tag_name}-local`;
+  }
+
   await downloadFile(
-    `https://github.com/erxes/erxes/releases/download/${gitInfo.tag_name}/erxes-${gitInfo.tag_name}.tar.gz`,
+    `https://github.com/erxes/erxes/releases/download/${gitInfo.tag_name}/erxes-${fileName}.tar.gz`,
     'build.tar.gz'
   );
 
@@ -112,7 +120,11 @@ module.exports.downloadLatesVersion = async () => {
 
   log('Extracting tar ...');
 
-  await execCommand(`tar -xf build.tar.gz`);
+  await execCommand(`tar xf build.tar.gz`);
+
+  if (DOMAIN.includes('localhost')) {
+    await execCommand(`mv build-local build`);
+  }
 
   log('Removing temp files ...');
 
@@ -157,7 +169,7 @@ module.exports.startServices = async configs => {
   }
 
   const generateMongoUrl = dbName => {
-    if (MONGO_URL.includes('authSource')) {
+    if (MONGO_URL.includes('replicaSet')) {
       return MONGO_URL.replace('erxes?', `${dbName}?`);
     }
 
@@ -176,6 +188,9 @@ module.exports.startServices = async configs => {
   let WIDGETS_DOMAIN = `http://localhost:${PORT_WIDGETS}`;
   let DASHBOARD_UI_DOMAIN = `http://localhost:${PORT_DASHBOARD_UI}`;
   let DASHBOARD_API_DOMAIN = `http://localhost:${PORT_DASHBOARD_API}`;
+  let dasbhoardSchemaPath = '/build/dashboard-api/schema';
+
+  const HELPERS_DOMAIN = `https://helper.erxes.io/`;
 
   if (!DOMAIN.includes('localhost')) {
     API_DOMAIN = `${DOMAIN}/api`;
@@ -183,12 +198,17 @@ module.exports.startServices = async configs => {
     WIDGETS_DOMAIN = `${DOMAIN}/widgets`;
     DASHBOARD_UI_DOMAIN = `${DOMAIN}/dashboard/front`;
     DASHBOARD_API_DOMAIN = `${DOMAIN}/dashboard/api`;
+    dasbhoardSchemaPath = '/schema';
   }
+
+  const API_MONGO_URL = generateMongoUrl('erxes');
 
   const commonEnv = {
     NODE_ENV: 'production',
     JWT_TOKEN_SECRET: JWT_TOKEN_SECRET || '',
-    MONGO_URL: generateMongoUrl('erxes'),
+    MONGO_URL: API_MONGO_URL,
+    ELASTICSEARCH_URL,
+    ELK_SYNCER,
     MAIN_APP_DOMAIN: DOMAIN,
     WIDGETS_DOMAIN: WIDGETS_DOMAIN,
     INTEGRATIONS_API_DOMAIN: INTEGRATIONS_API_DOMAIN,
@@ -206,6 +226,7 @@ module.exports.startServices = async configs => {
       env: {
         PORT: PORT_API,
         DASHBOARD_DOMAIN: USE_DASHBOARD ? DASHBOARD_UI_DOMAIN : null,
+        HELPERS_DOMAIN: USE_DASHBOARD ? HELPERS_DOMAIN : null,
         ...commonEnv,
         ...optionalDbConfigs,
         DEBUG: 'erxes-api:*'
@@ -296,7 +317,8 @@ module.exports.startServices = async configs => {
     }
 
     const jwt = require('jsonwebtoken');
-    const CUBE_API_SECRET = 'secret';
+
+    const CUBE_API_SECRET = Math.random().toString();
 
     const cubejsToken = await jwt.sign({}, CUBE_API_SECRET, {
       expiresIn: '10year'
@@ -306,14 +328,16 @@ module.exports.startServices = async configs => {
       name: 'dashboard-api',
       script: filePath('build/dashboard-api'),
       env: {
-        // NODE_ENV: 'production',
+        NODE_ENV: 'production',
         PORT: PORT_DASHBOARD_API,
         DEBUG: 'erxes-dashboards:*',
+        DB_NAME: 'erxes',
         CUBEJS_URL: DASHBOARD_API_DOMAIN,
         CUBEJS_API_SECRET: CUBE_API_SECRET,
         CUBEJS_TOKEN: cubejsToken,
         CUBEJS_DB_TYPE: 'elasticsearch',
         CUBEJS_DB_URL: ELASTICSEARCH_URL,
+        SCHEMA_PATH: dasbhoardSchemaPath,
         REDIS_URL: REDIS_HOST,
         REDIS_PASSWORD: REDIS_PASSWORD
       }
@@ -350,19 +374,13 @@ module.exports.startServices = async configs => {
   if (ELK_SYNCER) {
     log('Starting elkSyncer ...');
 
-    await runCommand('sudo', ['apt', 'install', '-y', 'python3-pip']);
-    await runCommand('pip3', [
-      'install',
-      '-r',
-      'build/elkSyncer/requirements.txt'
-    ]);
-
     apps.push({
       name: 'elkSyncer',
-      script: filePath('build/elkSyncer/main.py'),
+      cwd: filePath('build/elkSyncer'),
+      script: 'main.py',
       interpreter: '/usr/bin/python3',
       env: {
-        MONGO_URL,
+        MONGO_URL: API_MONGO_URL,
         ELASTICSEARCH_URL
       }
     });
@@ -387,8 +405,12 @@ module.exports.startServices = async configs => {
         NODE_ENV: "production",
         REACT_APP_API_URL: "${API_DOMAIN}",
         REACT_APP_API_SUBSCRIPTION_URL: "${subscriptionsUrl}",
-        REACT_APP_CDN_HOST: "${WIDGETS_DOMAIN}"
-        REACT_APP_DASHBOARD_URL: "${USE_DASHBOARD ? DASHBOARD_UI_DOMAIN : null}"
+        REACT_APP_CDN_HOST: "${WIDGETS_DOMAIN}",
+        ${
+          USE_DASHBOARD
+            ? `REACT_APP_DASHBOARD_URL: "${DASHBOARD_UI_DOMAIN}"`
+            : ''
+        }
       }
     `
     );
@@ -439,6 +461,10 @@ module.exports.startServices = async configs => {
     PORT_DASHBOARD_UI
   });
 
+  log('Running migrations ...');
+
+  await execCommand(`MONGO_URL="${API_MONGO_URL}" node ${filePath('build/api/commands/migrate.js')}`);
+
   return runCommand('pm2', ['start', filePath('ecosystem.config.js')], false);
 };
 
@@ -461,6 +487,8 @@ const generateNginxConf = async ({
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_http_version 1.1;
   `;
+
+  let dashboardConfig = ``;
 
   if (USE_DASHBOARD) {
     dashboardConfig = `

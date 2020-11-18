@@ -134,6 +134,7 @@ let redisPort = 6379;
 let redisPassword = '';
 let elasticsearchUrl = 'http:/localhost:9200';
 let elkSyncer = false;
+let useDashboard = false;
 
 const readline = createInterface({
   input: process.stdin,
@@ -238,19 +239,6 @@ module.exports = (async function() {
     if (answers.elkSyncer.includes('python')) {
       elkSyncer = true;
     }
-  }
-
-  answer = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'dashboard',
-      message: 'Do you want use dashboard'
-    }
-  ]);
-
-  if (answer) {
-    useDashboard = true;
-    elkSyncer = true;
   }
 
   readline.close();
