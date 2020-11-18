@@ -267,8 +267,11 @@ systemctl enable pm2-$username
 
 MONGO_URL="mongodb://erxes:$MONGO_PASS@localhost/erxes?authSource=admin\&replicaSet=rs0"
 
+export MONGO_URL
+
 sourceCommand="source ~/.nvm/nvm.sh && nvm use $NODE_VERSION"
 su $username -c "$sourceCommand && yarn create erxes-app erxes --quickStart --domain=$erxes_domain --mongoUrl=\"$MONGO_URL\" --elasticsearchUrl=$ELASTICSEARCH_URL"
+
 cd erxes
 su $username -c "$sourceCommand && yarn start"
 cp nginx.conf /etc/nginx/sites-enabled/erxes.conf
