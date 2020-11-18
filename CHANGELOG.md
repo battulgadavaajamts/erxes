@@ -1,3 +1,12 @@
+## [0.20.6](https://github.com/erxes/erxes/compare/0.20.116...0.20.6) (2020-11-18)
+
+
+### Features
+
+* **calendar:** added calendar feature ([a30a1e2](https://github.com/erxes/erxes/commit/a30a1e2cfbfb21a2c2fb81b5a6a5415988abad7f))
+* **dashboard:** using elasticsearch in cubejs backend ([b9ae06c](https://github.com/erxes/erxes/commit/b9ae06c0652a92383325031b9146339f87fbb425))
+* **language:** updated spanish translation ([6e0a95e](https://github.com/erxes/erxes/commit/6e0a95e7259280d4592c0cb7fa5039150154e403)), closes [#2455](https://github.com/erxes/erxes/issues/2455)
+
 ## [0.20.5](https://github.com/erxes/erxes/compare/0.20.116...0.20.5) (2020-11-18)
 
 
